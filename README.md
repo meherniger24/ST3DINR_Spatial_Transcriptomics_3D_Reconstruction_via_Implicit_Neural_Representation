@@ -189,30 +189,6 @@ Output: one `.obj` mesh file per cell type, ready to import into Blender.
 
 ---
 
-## Comparing 3-Slice vs 9-Slice Reconstruction
-
-A key application of this pipeline is comparing reconstruction quality with different numbers of input slices:
-
-| Configuration | Slices | Z-gaps | Virtual slices generated |
-|---|---|---|---|
-| Sparse | B01, E01, E02 | 30µm, 50µm | 14 |
-| Dense | All 9 (B01–E02) | 10µm uniform | 8 |
-
-With 9 evenly spaced slices, the INR is much better constrained along the z-axis and produces more accurate interpolations. This comparison serves as a built-in validation of the approach.
-
----
-
-## Why STINR Over Other Methods
-
-| Method | Limitation for sparse slice interpolation |
-|---|---|
-| SUICA | Requires k-NN graph — breaks down with large, uneven z-gaps |
-| UniST | Rasterizes to pixel grid (loses resolution) + assumes video-like continuity between slices |
-| SDF interpolation | Purely geometric — ignores gene expression |
-| **STINR (ours)** | Coordinate-based INR — no graph, no rasterization, biologically constrained via deconvolution |
-
----
-
 ## Citation
 
 If you use this pipeline, please cite the original STINR paper:
