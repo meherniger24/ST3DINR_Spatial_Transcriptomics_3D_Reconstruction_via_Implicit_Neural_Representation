@@ -191,7 +191,7 @@ Output: one `.obj` mesh file per cell type, ready to import into Blender.
 
 ## Citation
 
-If you use this pipeline, please cite the original STINR paper:
+original STINR paper:
 
 ```bibtex
 @inproceedings{luo2025stinr,
