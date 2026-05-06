@@ -4,15 +4,6 @@ Created on Fri Mar 13 12:09:57 2026
 
 @author: MNiger
 """
-"""
-Train STINR on gastric cancer spatial transcriptomics data.
-
-Adapted from STINR (CVPR 2025) for 3-slice gastric cancer 3D reconstruction.
-Includes subsampling for initial pipeline testing on Mac M4 Max.
-
-Usage:
-    python train_stinr_gastric.py
-"""
 
 import os
 import sys
@@ -27,7 +18,7 @@ from sklearn.mixture import GaussianMixture
 from scipy.sparse import issparse
 sys.path.insert(0, "/Users/mniger/Library/CloudStorage/OneDrive-InsideMDAnderson/linghua_all/STINR/STINR/")  
 
-DATA_DIR = "Library/CloudStorage/OneDrive-InsideMDAnderson/linghua_all/stinr_data_9_slices"  
+DATA_DIR = "Library/CloudStorage/OneDrive-InsideMDAnderson/linghua_all/stinr_data"  
 
 # Subsampling: set to None for full data, or a number like 50000 for testing
 SUBSAMPLE_PER_SLICE = 20000  # ~60K total spots for initial test (set None for full)
@@ -42,7 +33,7 @@ N_CLUSTERS = 22  # number of cell types for GMM clustering
 DEVICE = "mps" if torch.backends.mps.is_available() else (
     "cuda" if torch.cuda.is_available() else "cpu")
 
-SAVE_DIR = "Library/CloudStorage/OneDrive-InsideMDAnderson/linghua_all/stinr_results_9_slices"
+SAVE_DIR = "Library/CloudStorage/OneDrive-InsideMDAnderson/linghua_all/stinr_results"
 
 
 def set_seed(seed):
@@ -54,7 +45,7 @@ def set_seed(seed):
 
 
 def subsample_data(adata_st, adata_st_list_raw, n_per_slice, n_neighbors):
-    """Subsample spots from each slice for faster testing."""
+    
     if n_per_slice is None:
         return adata_st, adata_st_list_raw
     
@@ -122,7 +113,7 @@ def subsample_data(adata_st, adata_st_list_raw, n_per_slice, n_neighbors):
 
 
 def check_mps_compatibility():
-    """Check and warn about MPS (Apple Silicon) limitations."""
+    
     if DEVICE == "mps":
         print("\n⚠  Running on Apple MPS (Metal Performance Shaders)")
         print("   Some PyTorch operations may fall back to CPU.")
@@ -137,7 +128,7 @@ def main():
     device_str = check_mps_compatibility()
     print(f"Device: {device_str}")
     
-    # ── Load data ──
+    
     print("=" * 70)
     print("Loading prepared STINR data...")
     print("=" * 70)
@@ -154,7 +145,7 @@ def main():
     print(f"  adata_basis: {adata_basis.shape}")
     print(f"  Slices: {[a.shape for a in adata_st_list_raw]}")
     
-    # ── Handle zero-count spots ──
+    # Handle zero-count spots 
     lib_sizes = adata_st.obs['library_size'].values
     zero_mask = lib_sizes == 0
     n_zero = zero_mask.sum()
@@ -163,15 +154,15 @@ def main():
         print(f"  Setting them to 1 to avoid log(0) in loss function.")
         adata_st.obs.loc[zero_mask, 'library_size'] = 1.0
     
-    # ── Subsample for testing ──
+    # subsample for testing
     adata_st, adata_st_list_raw = subsample_data(
         adata_st, adata_st_list_raw, SUBSAMPLE_PER_SLICE, N_NEIGHBORS)
     
-    # ── Import STINR model ──
+    # import STINR model 
     # Add STINR to path
     stinr_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
                                '..', 'STINR')  
-    # Try common locations
+    # try common locations
     for candidate in [stinr_path, './STINR', '../STINR', 
                        os.path.expanduser('~/STINR')]:
         if os.path.isdir(candidate):
@@ -179,10 +170,6 @@ def main():
             break
     
     from STINR.model import Model
-    
-    # ── Patch the model for our use case ──
-    # STINR hardcodes DLPFC-specific slice indices and file paths in model.py
-    # We need to override the training steps and handle our device
     
     print("\n" + "=" * 70)
     print("Initializing STINR model...")
@@ -210,13 +197,13 @@ def main():
     # Override training steps in the net
     model.net.training_steps = TRAINING_STEPS
     
-    # ── Train ──
+    # train 
     print("\n" + "=" * 70)
     print("Training STINR...")
     print("=" * 70)
     
     # Note: STINR's train() has hardcoded DLPFC evaluation code.
-    # We'll run the training loop manually to avoid that.
+    # running the training loop manually to avoid that.
     model.net.train()
     
     from tqdm import tqdm
@@ -239,14 +226,14 @@ def main():
         if step % 500 == 0:
             print(f"  Step {step}: loss = {loss.item():.4f}")
     
-    # ── Evaluate ──
+    #Evaluate
     print("\n" + "=" * 70)
     print("Evaluating...")
     print("=" * 70)
     
     result = model.eval(adata_st_list_raw, save=True, output_path=SAVE_DIR)
     
-    # ── Clustering ──
+    #Clustering 
     print("\nRunning GMM clustering on latent representations...")
     np.random.seed(SEED)
     gm = GaussianMixture(n_components=N_CLUSTERS, covariance_type='tied',
@@ -255,7 +242,7 @@ def main():
     y = gm.fit_predict(latent)
     model.adata_st.obs["GM_cluster"] = y
     
-   # ── Save results ──
+   # Save results
     print("\nSaving results...")
     model.adata_st.write_h5ad(os.path.join(SAVE_DIR, "adata_st_with_results.h5ad"))
     
