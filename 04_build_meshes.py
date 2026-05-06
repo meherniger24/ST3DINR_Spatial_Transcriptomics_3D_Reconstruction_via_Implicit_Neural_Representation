@@ -1,17 +1,3 @@
-"""
-Convert STINR interpolated slices → density volumes → meshes for Blender.
-
-Reads the interpolated h5ad files, builds per-cell-type 3D density fields,
-extracts isosurfaces via marching cubes, and exports OBJ meshes ready for Blender.
-
-Coordinate convention (from your h5 data):
-  cell_x → vertical axis (maps to sp0 / axis 0 of density grid)
-  cell_y → horizontal axis (maps to sp1 / axis 1 of density grid)
-  z → depth axis (axis 2 of density grid)
-
-Usage:
-    python build_3d_meshes.py
-"""
 
 import os
 import numpy as np
@@ -21,27 +7,21 @@ from scipy.ndimage import gaussian_filter
 from skimage.measure import marching_cubes
 import gc
 
-# ══════════════════════════════════════════════════════════════════════
-# CONFIGURATION
-# ══════════════════════════════════════════════════════════════════════
-INTERPOLATED_DIR = "Library/CloudStorage/OneDrive-InsideMDAnderson/linghua_all/interpolated_slices_9_slices"
-OUTPUT_DIR = "Library/CloudStorage/OneDrive-InsideMDAnderson/linghua_all/STINR_meshes_3d_9_slices"
+INTERPOLATED_DIR = "Library/CloudStorage/OneDrive-InsideMDAnderson/linghua_all/interpolated_slices"
+OUTPUT_DIR = "Library/CloudStorage/OneDrive-InsideMDAnderson/linghua_all/STINR_meshes_3d"
 
-# Density grid parameters (adapted from your working Blender pipeline)
+# Density grid parameters 
 GRID_RESOLUTION = 300      # number of bins along x and y axes
 N_Z_INTERP = 300           # number of interpolation points along z
 CELL_SIGMA_XY = 3.0        # Gaussian sigma in x,y (in grid units)
 CELL_SIGMA_Z = 12.0         # Gaussian sigma in z (in grid units)
 LEVEL_FRAC = 0.1         # isosurface threshold as fraction of max density
 
-# Cell types to generate meshes for (set to None for all detected types)
-# You can filter to specific types of interest:
+
 CELL_TYPES_TO_MESH = None  # None = all, or e.g. ['Tumor-PCNA', 'Tumor-PD-L1', 'Fibro', 'SMC']
 
-# Whether to use dominant cell type (hard assignment) or proportions (soft)
-USE_PROPORTIONS = True  # False = use dominant cell type (like your original pipeline)
-# ══════════════════════════════════════════════════════════════════════
 
+USE_PROPORTIONS = True  # False = use dominant cell type (like your original pipeline)
 
 def load_interpolated_data(interp_dir):
     """Load all interpolated slices and combine into a single dataframe."""
