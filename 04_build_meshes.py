@@ -24,7 +24,7 @@ CELL_TYPES_TO_MESH = None  # None = all, or e.g. ['Tumor-PCNA', 'Tumor-PD-L1', '
 USE_PROPORTIONS = True  # False = use dominant cell type (like your original pipeline)
 
 def load_interpolated_data(interp_dir):
-    """Load all interpolated slices and combine into a single dataframe."""
+    
     print("Loading interpolated slices...")
     
     adata = ad.read_h5ad(os.path.join(interp_dir, "all_interpolated_slices.h5ad"))
@@ -50,13 +50,7 @@ def load_interpolated_data(interp_dir):
 def build_density_volume(coords_3d, cell_types, target_ct,
                          grid_res, n_z_interp, sigma_xy, sigma_z,
                          x_range, y_range, z_range):
-    """
-    Build a 3D density volume for a single cell type.
     
-    Returns:
-        density: 3D numpy array (grid_res × grid_res × n_z_interp)
-        grid_info: dict with axis ranges for coordinate mapping
-    """
     # Filter to target cell type
     ct_mask = cell_types == target_ct
     ct_coords = coords_3d[ct_mask]
@@ -95,13 +89,7 @@ def build_density_volume(coords_3d, cell_types, target_ct,
 
 
 def extract_mesh(density, grid_info, level_frac):
-    """
-    Extract isosurface mesh from density volume using marching cubes.
     
-    Returns:
-        vertices: (N, 3) array of vertex positions in original coordinate space
-        faces: (M, 3) array of triangle face indices
-    """
     threshold = density.max() * level_frac
     
     if threshold <= 0:
@@ -129,7 +117,7 @@ def extract_mesh(density, grid_info, level_frac):
 
 
 def save_obj(vertices, faces, filepath):
-    """Save mesh as OBJ file."""
+    
     with open(filepath, 'w') as f:
         f.write(f"# Cell type mesh\n")
         f.write(f"# Vertices: {len(vertices)}, Faces: {len(faces)}\n")
@@ -147,7 +135,7 @@ def main():
     print("3D Mesh Generation from STINR Interpolated Data")
     print("=" * 70)
     
-    # ── Load data ──
+    
     coords_3d, cell_types, z_values, unique_cts, adata = load_interpolated_data(INTERPOLATED_DIR)
     
     # Determine cell types to process
@@ -167,7 +155,7 @@ def main():
     del adata
     gc.collect()
     
-    # ── Process each cell type ──
+    
     mesh_summary = []
     
     for ct_idx, ct in enumerate(cts_to_process):
@@ -224,7 +212,7 @@ def main():
             'file': obj_path
         })
     
-    # ── Summary ──
+    
     print(f"\n{'='*70}")
     print("MESH GENERATION COMPLETE!")
     print(f"{'='*70}")
@@ -239,7 +227,7 @@ def main():
     summary_df = pd.DataFrame(mesh_summary)
     summary_df.to_csv(os.path.join(OUTPUT_DIR, "mesh_summary.csv"), index=False)
     
-    # ── Save coordinate info for Blender ──
+    
     coord_info = {
         'x_range': list(x_range),
         'y_range': list(y_range),
@@ -256,9 +244,7 @@ def main():
     with open(os.path.join(OUTPUT_DIR, "coord_info.json"), 'w') as f:
         json.dump(coord_info, f, indent=2)
     
-    print(f"\n  Next: import OBJ files into Blender and assign materials/colors per cell type")
-    print(f"  Coordinate info saved to coord_info.json for Blender script reference")
-
+    
 
 if __name__ == "__main__":
     main()
