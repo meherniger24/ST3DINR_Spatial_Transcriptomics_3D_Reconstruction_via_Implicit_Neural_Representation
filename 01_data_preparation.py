@@ -26,16 +26,16 @@ import os
 import gc
 
 INPUT_PATH = "Library/CloudStorage/OneDrive-InsideMDAnderson/linghua_all/linghua_gastric cancer/combined_corrected.h5ad" 
-OUTPUT_DIR = "Library/CloudStorage/OneDrive-InsideMDAnderson/linghua_all/stinr_data_9_slices"
-SLICES = ['B01', 'C01', 'D01', 'E01', 'A02', 'B02', 'C02', 'D02', 'E02']
+OUTPUT_DIR = "Library/CloudStorage/OneDrive-InsideMDAnderson/linghua_all/stinr_data"
+SLICES = ['B01', 'D02', 'E02']
 N_NEIGHBORS = 6
 
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-# ══════════════════════════════════════════════════════════════════════
-# PHASE 1: Process each slice individually, save per-slice files
-# ══════════════════════════════════════════════════════════════════════
+
+#Process each slice individually, save per-slice files
+
 print("=" * 70)
 print("PHASE 1: Process slices one at a time")
 print("=" * 70)
@@ -123,9 +123,9 @@ for i, s in enumerate(SLICES):
     gc.collect()
     print(f"  {s} done: z={z_val}, lib_size=[{library_size.min():.0f}, {library_size.max():.0f}]")
 
-# ══════════════════════════════════════════════════════════════════════
-# PHASE 2: Combine slices into adata_st
-# ══════════════════════════════════════════════════════════════════════
+
+# Combine slices into adata_st
+
 print(f"\n{'='*70}")
 print("PHASE 2: Combining slices")
 print("=" * 70)
@@ -187,9 +187,8 @@ adata_st.obsm['count'] = X_raw_all
 adata_st.write_h5ad(os.path.join(OUTPUT_DIR, "adata_st.h5ad"))
 print("  Saved adata_st.h5ad")
 
-# ══════════════════════════════════════════════════════════════════════
-# PHASE 3: Build basis matrix
-# ══════════════════════════════════════════════════════════════════════
+
+# Build basis matrix
 print(f"\n{'='*70}")
 print("PHASE 3: Building basis matrix")
 print("=" * 70)
@@ -209,8 +208,6 @@ adata_basis = ad.AnnData(
 )
 adata_basis.write_h5ad(os.path.join(OUTPUT_DIR, "adata_basis.h5ad"))
 print(f"  adata_basis: {adata_basis.shape} — saved")
-
-# ══════════════════════════════════════════════════════════════════════
 print(f"\n{'='*70}")
 print("DONE!")
 print(f"  adata_st:    {adata_st.shape}")
