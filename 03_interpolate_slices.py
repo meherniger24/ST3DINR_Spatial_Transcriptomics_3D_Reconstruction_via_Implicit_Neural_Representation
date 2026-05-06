@@ -319,8 +319,7 @@ def main():
         pct = n / len(all_cts) * 100
         print(f"    {ct:25s}: {n:>8,} ({pct:5.1f}%)")
     
-    print(f"\n  Next step: feed these into your density → marching cubes → Blender pipeline!")
- 
+    
  
 if __name__ == "__main__":
     main()
